@@ -8,20 +8,17 @@
 #include "iostream"
 #include <windows.h>
 #include "vector"
+#include <utility>
 #include "math.h"
 
 using namespace std;
 
 vector<POINT> points;
+pair<int, int> Entry;
 COLORREF color = RGB(255, 0, 0);
 
 const int MAXENTRIES = 600;
-class Entry
-{
-public:
-    Entry(int xmin, int xmax) : xmin(xmin), xmax(xmax) {}
-    int xmin,xmax;
-};
+
 
 void drawLine(HDC hdc, int x1, int y1, int x2, int y2, COLORREF color) {
     int dx = x2 - x1;
@@ -57,16 +54,16 @@ void drawLine(HDC hdc, int x1, int y1, int x2, int y2, COLORREF color) {
     }
 }
 
-void InitEntries(vector<Entry>& table)
+void InitEntries(vector<pair<int, int>>& table)
 {
     for(int i=0; i < MAXENTRIES;i++)
     {
-        Entry e = Entry(MAXINT,-1);
+        pair<int, int> e;e.first = MAXINT;e.second=-1;
         table.push_back(e);
     }
 }
 
-void ScanEdge(POINT v1,POINT v2,vector<Entry>& table)
+void ScanEdge(POINT v1,POINT v2,vector<pair<int, int>>& table)
 {
     if(v1.y==v2.y)return;
     if(v1.y>v2.y)swap(v1,v2);
@@ -75,21 +72,21 @@ void ScanEdge(POINT v1,POINT v2,vector<Entry>& table)
     int y=v1.y;
     while(y<v2.y)
     {
-        if(x<table[y].xmin)
-            table[y].xmin=(int)ceil(x);
-        if(x>table[y].xmax)
-            table[y].xmax=(int)floor(x);
-        cout<<table[y].xmin<<" "<<table[y].xmax<<"\n";
+        if(x<table[y].first)
+            table[y].first=(int)ceil(x);
+        if(x>table[y].second)
+            table[y].second=(int)floor(x);
+        cout<<table[y].first<<" "<<table[y].second<<"\n";
         y++;
         x+=minv;
     }
 }
 
-void DrawSanLines(HDC hdc,vector<Entry> table,COLORREF color)
+void DrawSanLines(HDC hdc,vector<pair<int, int>> table,COLORREF color)
 {
     for(int y=0;y<MAXENTRIES;y++)
-        if(table[y].xmin<table[y].xmax)
-            drawLine(hdc, table[y].xmin, y, table[y].xmax, y, color);
+        if(table[y].first<table[y].second)
+            drawLine(hdc, table[y].first, y, table[y].second, y, color);
             /*
             for(int x=table[y].xmin;x<=table[y].xmax;x++)
                 SetPixel(hdc,x,y,color);
@@ -101,7 +98,7 @@ void DrawSanLines(HDC hdc,vector<Entry> table,COLORREF color)
 
 void ConvexFill(HDC hdc,vector<POINT> p,int n,COLORREF color)
 {
-    vector<Entry> table;
+    vector<pair<int, int>> table;
     InitEntries(table);
     POINT v1=p[n-1];
     for(int i=0;i<n;i++)
